@@ -1,0 +1,19 @@
+{
+  "name": "pr-review-worker",
+  "version": "1.0.0",
+  "description": "BullMQ consumer for AI PR Review Assistant",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@google/genai": "^2.8.0",
+    "bullmq": "^5.79.0",
+    "dotenv": "^17.4.2",
+    "ioredis": "^5.11.1",
+    "mongoose": "^8.24.0"
+  }
+}
