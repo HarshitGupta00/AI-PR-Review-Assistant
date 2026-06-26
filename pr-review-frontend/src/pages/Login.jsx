@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
-import { Zap } from 'lucide-react';
+import { BrainCircuit } from 'lucide-react';
 
 function GithubIcon() {
   return (
@@ -38,7 +38,7 @@ export default function Login() {
             className="flex justify-center mb-6"
           >
             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center glow">
-              <Zap size={28} className="text-white" />
+              <BrainCircuit size={28} className="text-white" />
             </div>
           </motion.div>
 

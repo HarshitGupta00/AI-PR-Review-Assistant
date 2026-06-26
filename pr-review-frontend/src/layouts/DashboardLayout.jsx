@@ -3,7 +3,7 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   LayoutDashboard, GitBranch, FileText, BarChart3,
-  Settings, Bell, ChevronDown, Zap, Plus, X
+  Settings, Bell, ChevronDown, BrainCircuit, Plus, X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import GitHubStatusBadge from '../components/dashboard/GitHubStatusBadge';
@@ -38,7 +38,7 @@ export default function DashboardLayout() {
             {/* Logo */}
             <div className="flex items-center gap-3 px-5 py-5 border-b border-[#1e2d45]/60">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center glow-sm flex-shrink-0">
-                <Zap size={16} className="text-white" />
+                <BrainCircuit size={16} className="text-white" />
               </div>
               <div>
                 <p className="text-sm font-bold text-white leading-tight">AI PR Review</p>

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import {
-  Zap, Bell, Moon, Sun, Monitor,
+  BrainCircuit, Bell, Moon, Sun, Monitor,
   CheckCircle, ChevronRight, Unlink, Mail, MessageSquare, Lock, AlertTriangle, Loader
 } from 'lucide-react';
 
@@ -155,7 +155,7 @@ export default function Settings() {
         <Section title="AI Engine" index={1}>
           <div>
             <p className="text-sm font-medium text-[#e8eaf6] mb-3 flex items-center gap-2">
-              <Zap size={14} className="text-indigo-400" />
+              <BrainCircuit size={14} className="text-indigo-400" />
               Default Model
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

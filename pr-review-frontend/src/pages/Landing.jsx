@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Zap, ArrowRight, GitPullRequest, Shield, Gauge, Bug, ChevronRight, Check } from 'lucide-react';
+import { BrainCircuit, ArrowRight, GitPullRequest, Shield, Gauge, Bug, ChevronRight, Check, MessageSquare, ChevronsRight } from 'lucide-react';
 
 const features = [
   {
@@ -27,10 +27,10 @@ const features = [
 ];
 
 const steps = [
-  'Connect Repository',
-  'Select Pull Request',
-  'AI Reviews Code',
-  'Get Actionable Feedback',
+  { text: 'Connect Repository', icon: GithubIcon },
+  { text: 'Select Pull Request', icon: GitPullRequest },
+  { text: 'AI Reviews Code', icon: BrainCircuit },
+  { text: 'Get Actionable Feedback', icon: MessageSquare },
 ];
 
 const fadeUp = {
@@ -58,7 +58,7 @@ export default function Landing() {
       <nav className="relative z-10 flex items-center justify-between px-8 py-5 border-b border-[#1e2d45]/40 glass">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center glow-sm">
-            <Zap size={16} className="text-white" />
+            <BrainCircuit size={16} className="text-white" />
           </div>
           <span className="font-bold text-white">AI PR Review</span>
         </div>
@@ -210,22 +210,35 @@ export default function Landing() {
         <div className="flex flex-col md:flex-row items-center justify-center gap-0 max-w-3xl mx-auto">
           {steps.map((step, i) => (
             <motion.div
-              key={step}
+              key={step.text}
               custom={i}
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
               variants={fadeUp}
-              className="flex items-center gap-0"
+              className="flex items-center gap-2 md:gap-4"
             >
-              <div className="flex flex-col items-center text-center px-4">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold mb-3 glow-sm">
-                  {i + 1}
+              <div className="flex flex-col items-center text-center px-2">
+                <div className="w-14 h-14 rounded-2xl bg-[#0d1117] border border-[#1e2d45] flex items-center justify-center text-white mb-4 relative group hover:border-indigo-500/50 hover:bg-[#1e2d45]/40 transition-all duration-300 shadow-[0_0_15px_rgba(0,0,0,0.5)]">
+                  {/* Step number badge */}
+                  <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-[10px] font-bold shadow-lg shadow-indigo-500/20">
+                    {i + 1}
+                  </div>
+                  <step.icon size={24} className="text-indigo-400 group-hover:text-indigo-300 transition-colors" />
                 </div>
-                <p className="text-sm font-medium text-[#e8eaf6] max-w-[120px]">{step}</p>
+                <p className="text-sm font-medium text-[#e8eaf6] max-w-[120px]">{step.text}</p>
               </div>
+              
               {i < steps.length - 1 && (
-                <ChevronRight size={20} className="text-[#1e2d45] flex-shrink-0 hidden md:block" />
+                <div className="hidden md:flex flex-col items-center justify-center w-12 lg:w-20 -mt-8 relative opacity-60">
+                  <motion.div 
+                    className="absolute w-full h-[2px] bg-gradient-to-r from-[#1e2d45] via-indigo-500/50 to-[#1e2d45]"
+                    animate={{ backgroundPosition: ['200% 0', '-200% 0'] }}
+                    transition={{ repeat: Infinity, duration: 3, ease: 'linear' }}
+                    style={{ backgroundSize: '200% 100%' }}
+                  />
+                  <ChevronsRight size={18} className="text-indigo-400/80 z-10 bg-[#05060f] px-0.5" />
+                </div>
               )}
             </motion.div>
           ))}
@@ -254,12 +267,12 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-6 h-6 rounded bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-              <Zap size={12} className="text-white" />
+              <BrainCircuit size={12} className="text-white" />
             </div>
             <span className="text-sm font-semibold text-[#e8eaf6]">AI PR Review</span>
           </div>
           <div className="flex items-center gap-6 text-sm text-[#8892b0]">
-            <a href="#" className="hover:text-[#e8eaf6] transition-colors">GitHub</a>
+            <a href="https://github.com/HarshitGupta00/AI-PR-Review-Assistant" target="_blank" rel="noopener noreferrer" className="hover:text-[#e8eaf6] transition-colors">GitHub</a>
             <a href="#" className="hover:text-[#e8eaf6] transition-colors">Docs</a>
             <a href="#" className="hover:text-[#e8eaf6] transition-colors">Privacy</a>
           </div>
@@ -290,7 +303,7 @@ function PRFlowIllustration() {
 
         {/* AI Review card */}
         <FlowCard
-          icon={<Zap size={16} className="text-purple-400" />}
+          icon={<BrainCircuit size={16} className="text-purple-400" />}
           label="AI Review"
           title="Gemini Flash analyzing..."
           sub="Reviewing 8 files · 2.3s"
@@ -361,9 +374,9 @@ function IssueBadge({ color, label, text }) {
   );
 }
 
-function GithubIcon() {
+function GithubIcon({ size = 16, className = "" }) {
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="currentColor" className={className}>
       <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z" />
     </svg>
   );

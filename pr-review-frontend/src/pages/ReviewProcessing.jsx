@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router-dom';
-import { CheckCircle, Loader, Clock, AlertTriangle, Zap } from 'lucide-react';
+import { CheckCircle, Loader, Clock, AlertTriangle, BrainCircuit } from 'lucide-react';
 import { getReview } from '../api/reviews';
 
 const progressSteps = [
@@ -162,7 +162,7 @@ export default function ReviewProcessing() {
 
           <div className="flex-1 space-y-3 overflow-hidden">
             <div className="flex flex-col items-center justify-center h-full text-center py-8">
-              <Zap size={32} className="text-[#1e2d45] mb-3" />
+              <BrainCircuit size={32} className="text-[#1e2d45] mb-3" />
               <p className="text-sm text-[#4a5568]">Waiting for AI to generate findings...</p>
             </div>
           </div>
