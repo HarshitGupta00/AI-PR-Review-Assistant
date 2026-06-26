@@ -95,6 +95,12 @@ async function getAnalyticsSummary(req, res) {
       },
     ]);
 
+    // 7. All review dates for frontend aggregation
+    const allReviews = await Review.find({ requestedBy: userId })
+      .select('createdAt')
+      .sort({ createdAt: 1 });
+    const reviewDates = allReviews.map(r => r.createdAt);
+
     const stats = totals[0] || { totalReviews: 0, totalIssues: 0, completedReviews: 0 };
 
     res.json({
@@ -113,6 +119,7 @@ async function getAnalyticsSummary(req, res) {
         count: d.count,
       })),
       repoHealth,
+      reviewDates,
     });
   } catch (err) {
     console.error('getAnalyticsSummary error:', err.message);

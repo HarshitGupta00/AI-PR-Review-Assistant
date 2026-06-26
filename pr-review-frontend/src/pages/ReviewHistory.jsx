@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { listReviews } from '../api/reviews';
-import { Calendar, Filter, CheckCircle, XCircle, Loader, Clock, ArrowRight, Search, GitBranch } from 'lucide-react';
+import { listReviews, deleteReview } from '../api/reviews';
+import { Calendar, Filter, CheckCircle, XCircle, Loader, Clock, ArrowRight, Search, GitBranch, Trash2, AlertTriangle } from 'lucide-react';
 
 const statusConfig = {
   completed: { icon: CheckCircle, color: 'text-emerald-400', label: 'Completed', badge: 'badge-success' },
@@ -37,6 +37,7 @@ export default function ReviewHistory() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [dateFilter, setDateFilter] = useState('All Time');
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, reviewId: null, isDeleting: false });
 
   useEffect(() => {
     async function load() {
@@ -69,6 +70,20 @@ export default function ReviewHistory() {
     }
     return matchSearch && matchDate;
   });
+
+  const confirmDelete = async () => {
+    if (!deleteModal.reviewId) return;
+    setDeleteModal(prev => ({ ...prev, isDeleting: true }));
+    try {
+      await deleteReview(deleteModal.reviewId);
+      setReviews(reviews.filter(r => r._id !== deleteModal.reviewId));
+      setTotal(prev => prev - 1);
+    } catch (err) {
+      console.error('Failed to delete review:', err);
+    } finally {
+      setDeleteModal({ isOpen: false, reviewId: null, isDeleting: false });
+    }
+  };
 
   return (
     <div className="p-6 lg:p-8 max-w-6xl mx-auto">
@@ -178,8 +193,20 @@ export default function ReviewHistory() {
                       <td className="px-6 py-4 text-sm text-[#8892b0] whitespace-nowrap">
                         {new Date(review.createdAt).toLocaleDateString()}
                       </td>
-                      <td className="px-6 py-4">
-                        <ArrowRight size={14} className="text-[#4a5568]" />
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-3">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeleteModal({ isOpen: true, reviewId: review._id, isDeleting: false });
+                            }}
+                            className="p-1.5 rounded-md text-[#4a5568] hover:text-red-400 hover:bg-red-400/10 transition-colors"
+                            title="Delete Review"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                          <ArrowRight size={14} className="text-[#4a5568]" />
+                        </div>
                       </td>
                     </motion.tr>
                   );
@@ -198,6 +225,45 @@ export default function ReviewHistory() {
           </div>
         )}
       </motion.div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-[#0f1623] border border-[#1e2d45] rounded-xl shadow-2xl max-w-sm w-full p-6"
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center shrink-0">
+                <AlertTriangle size={20} className="text-red-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-[#e8eaf6]">Delete Review</h3>
+            </div>
+            
+            <p className="text-sm text-[#8892b0] mb-6">
+              Are you sure you want to delete this PR review? This action cannot be undone and it will be permanently removed from your history and analytics.
+            </p>
+
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setDeleteModal({ isOpen: false, reviewId: null, isDeleting: false })}
+                disabled={deleteModal.isDeleting}
+                className="px-4 py-2 text-sm font-medium text-[#e8eaf6] bg-[#1e2d45]/60 hover:bg-[#1e2d45] rounded-lg transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={deleteModal.isDeleting}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors disabled:opacity-50"
+              >
+                {deleteModal.isDeleting ? <Loader size={14} className="animate-spin" /> : 'Delete'}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

@@ -121,4 +121,18 @@ async function getReview(req, res) {
   }
 }
 
-module.exports = { requestReview, listReviews, getReview };
+// DELETE /api/reviews/:id
+async function deleteReview(req, res) {
+  try {
+    const review = await Review.findOneAndDelete({
+      _id: req.params.id,
+      requestedBy: req.userId,
+    });
+    if (!review) return res.status(404).json({ error: 'Review not found' });
+    res.json({ success: true, message: 'Review deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete review' });
+  }
+}
+
+module.exports = { requestReview, listReviews, getReview, deleteReview };

@@ -17,6 +17,10 @@ export function listReviews({ limit = 20, skip = 0 } = {}) {
     .then(r => r.data);
 }
 
+export function deleteReview(reviewId) {
+  return api.delete(`/api/reviews/${reviewId}`).then(r => r.data);
+}
+
 // ── Repositories ───────────────────────────────────────────────────────────
 export function getRepos() {
   return api.get('/api/repos').then(r => r.data);
