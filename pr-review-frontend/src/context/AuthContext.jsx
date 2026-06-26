@@ -39,8 +39,18 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('pr-review-authed');
   }
 
+  async function deleteAccount() {
+    try {
+      await api.delete('/api/users/me');
+    } catch (err) {
+      console.error('Failed to delete account:', err);
+      throw err;
+    }
+    logout();
+  }
+
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, loadingUser, login, markLoggedIn, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, loadingUser, login, markLoggedIn, logout, deleteAccount }}>
       {children}
     </AuthContext.Provider>
   );

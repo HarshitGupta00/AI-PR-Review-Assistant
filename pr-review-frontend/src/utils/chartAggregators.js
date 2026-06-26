@@ -166,3 +166,106 @@ export function groupReviewsByYear(dates) {
   }
   return data;
 }
+
+// ─── Score Aggregators ────────────────────────────────────────────────────────
+
+function aggregateScores(records, timeKeyFn, formatLabelFn, formatTooltipFn, getNextTimeFn) {
+  if (!records || !records.length) return [];
+  const buckets = {};
+  
+  let minTime = Infinity;
+  let maxTime = -Infinity;
+
+  records.forEach(({ date, score }) => {
+    const t = timeKeyFn(date);
+    if (t < minTime) minTime = t;
+    if (t > maxTime) maxTime = t;
+    if (!buckets[t]) buckets[t] = { sum: 0, count: 0 };
+    buckets[t].sum += score;
+    buckets[t].count += 1;
+  });
+
+  const data = [];
+  let current = minTime;
+  while (current <= maxTime) {
+    const bucket = buckets[current];
+    data.push({
+      label: formatLabelFn(current),
+      tooltipTitle: formatTooltipFn(current),
+      tooltipSubtitle: 'Average Score',
+      score: bucket ? Math.round(bucket.sum / bucket.count) : null,
+    });
+    current = getNextTimeFn(current);
+  }
+  return data;
+}
+
+export function groupScoresByDay(records) {
+  return aggregateScores(
+    records,
+    (d) => { const x = new Date(d); x.setHours(0,0,0,0); return x.getTime(); },
+    (t) => formatShortDate(new Date(t)),
+    (t) => formatFullDate(new Date(t)),
+    (t) => t + 86400000
+  );
+}
+
+export function groupScoresByWeek(records) {
+  return aggregateScores(
+    records,
+    (d) => {
+      const x = new Date(d);
+      const day = x.getDay();
+      x.setDate(x.getDate() + (day === 0 ? -6 : 1 - day));
+      x.setHours(0,0,0,0);
+      return x.getTime();
+    },
+    (t) => `W${getWeekNumber(new Date(t))}`,
+    (t) => `Week ${getWeekNumber(new Date(t))} (${getWeekRange(new Date(t))})`,
+    (t) => t + 7 * 86400000
+  );
+}
+
+export function groupScoresByMonth(records) {
+  if (!records || !records.length) return [];
+  const buckets = {};
+  let minDate = new Date(records[0].date);
+  let maxDate = new Date(records[0].date);
+
+  records.forEach(({ date, score }) => {
+    const d = new Date(date);
+    if (d < minDate) minDate = d;
+    if (d > maxDate) maxDate = d;
+    const key = `${d.getFullYear()}-${d.getMonth()}`;
+    if (!buckets[key]) buckets[key] = { sum: 0, count: 0 };
+    buckets[key].sum += score;
+    buckets[key].count += 1;
+  });
+
+  const data = [];
+  const current = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+  const end = new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
+
+  while (current <= end) {
+    const key = `${current.getFullYear()}-${current.getMonth()}`;
+    const bucket = buckets[key];
+    data.push({
+      label: formatShortMonth(current),
+      tooltipTitle: formatMonthYear(current),
+      tooltipSubtitle: 'Average Score',
+      score: bucket ? Math.round(bucket.sum / bucket.count) : null,
+    });
+    current.setMonth(current.getMonth() + 1);
+  }
+  return data;
+}
+
+export function groupScoresByYear(records) {
+  return aggregateScores(
+    records,
+    (d) => new Date(d).getFullYear(),
+    (y) => y.toString(),
+    (y) => y.toString(),
+    (y) => y + 1
+  );
+}

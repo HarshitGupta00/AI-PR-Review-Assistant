@@ -76,8 +76,14 @@ async function requestReview(req, res) {
       reviewId: review._id,
     });
   } catch (err) {
+    if (err.response?.status === 404) {
+      return res.status(404).json({ error: `Pull Request #${pullRequestNumber} not found in ${repoFullName}.` });
+    }
+    if (err.response?.status === 403) {
+      return res.status(403).json({ error: `Access denied. Check your permissions for ${repoFullName}.` });
+    }
     console.error('requestReview error:', err.response?.data || err.message);
-    res.status(500).json({ error: 'Failed to queue review' });
+    res.status(500).json({ error: 'Failed to queue review. Please try again later.' });
   }
 }
 

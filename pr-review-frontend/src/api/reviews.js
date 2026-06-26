@@ -21,6 +21,15 @@ export function deleteReview(reviewId) {
   return api.delete(`/api/reviews/${reviewId}`).then(r => r.data);
 }
 
+export function validateRepo(fullName) {
+  const [owner, repo] = fullName.split('/');
+  return api.get(`/api/repos/validate/${owner}/${repo}`).then(r => r.data);
+}
+
+export function searchRepos(query) {
+  return api.get('/api/repos/search', { params: { q: query } }).then(r => r.data);
+}
+
 // ── Repositories ───────────────────────────────────────────────────────────
 export function getRepos() {
   return api.get('/api/repos').then(r => r.data);

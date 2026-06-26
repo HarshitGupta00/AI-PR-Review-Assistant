@@ -3,9 +3,10 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   LayoutDashboard, GitBranch, FileText, BarChart3,
-  Settings, Bell, Search, ChevronDown, Zap, Plus, X, Menu
+  Settings, Bell, ChevronDown, Zap, Plus, X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import GitHubStatusBadge from '../components/dashboard/GitHubStatusBadge';
 
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -21,7 +22,6 @@ export default function DashboardLayout() {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [searchFocused, setSearchFocused] = useState(false);
 
   return (
     <div className="flex h-screen bg-[#05060f] overflow-hidden">
@@ -100,31 +100,19 @@ export default function DashboardLayout() {
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Topbar */}
         <header className="flex items-center gap-4 px-6 py-4 border-b border-[#1e2d45]/60 bg-[#080b16]/80 backdrop-blur-xl z-10 flex-shrink-0">
-          {/* Toggle sidebar */}
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-1.5 rounded-md text-[#8892b0] hover:text-[#e8eaf6] hover:bg-[#1e2d45]/40 transition-all"
-          >
-            <Menu size={18} />
-          </button>
-
-          {/* Search */}
-          <div className={`flex items-center gap-2 flex-1 max-w-md px-3 py-2 rounded-lg border transition-all ${
-            searchFocused
-              ? 'border-indigo-500/50 bg-[#05060f]/80 shadow-[0_0_0_3px_rgba(99,102,241,0.1)]'
-              : 'border-[#1e2d45]/60 bg-[#0d1117]/60'
-          }`}>
-            <Search size={15} className="text-[#8892b0] flex-shrink-0" />
-            <input
-              type="text"
-              placeholder="Search repositories, reviews..."
-              className="flex-1 bg-transparent text-sm text-[#e8eaf6] placeholder-[#4a5568] outline-none"
-              onFocus={() => setSearchFocused(true)}
-              onBlur={() => setSearchFocused(false)}
-            />
+          <div className="flex-1 pl-4 hidden sm:flex items-center">
+            <div className="flex gap-6 lg:gap-5 text-lg  lg:text-xl font-bold tracking-[0.2em] bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">
+              <span>Analyze.</span>
+              <span>Review.</span>
+              <span>Improve.</span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2 ml-auto">
+          <div className="flex items-center gap-4 ml-auto">
+            <GitHubStatusBadge />
+            
+            <div className="h-5 w-px bg-[#1e2d45]/60 hidden sm:block"></div>
+
             {/* Notifications */}
             <button className="relative p-2 rounded-lg text-[#8892b0] hover:text-[#e8eaf6] hover:bg-[#1e2d45]/40 transition-all">
               <Bell size={18} />

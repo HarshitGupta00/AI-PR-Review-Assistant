@@ -8,7 +8,7 @@ async function getAnalyticsSummary(req, res) {
   const userId = new mongoose.Types.ObjectId(req.userId);
 
   try {
-    // 1. Total stats
+    // 1. Total stats (including average score and distinct repos)
     const totals = await Review.aggregate([
       { $match: { requestedBy: userId } },
       {
@@ -19,8 +19,21 @@ async function getAnalyticsSummary(req, res) {
           completedReviews: {
             $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] },
           },
+          reposReviewed: { $addToSet: '$repo' },
+          avgScore: {
+            $avg: { $cond: [{ $eq: ['$status', 'completed'] }, '$result.score', null] }
+          },
         },
       },
+      {
+        $project: {
+          totalReviews: 1,
+          totalIssues: 1,
+          completedReviews: 1,
+          reposReviewed: { $size: '$reposReviewed' },
+          avgScore: { $round: ['$avgScore', 1] },
+        }
+      }
     ]);
 
     // 2. Critical issues count
@@ -31,23 +44,7 @@ async function getAnalyticsSummary(req, res) {
       { $count: 'total' },
     ]);
 
-    // 3. Reviews per week (last 8 weeks)
-    const eightWeeksAgo = new Date();
-    eightWeeksAgo.setDate(eightWeeksAgo.getDate() - 56);
-
-    const weeklyReviews = await Review.aggregate([
-      { $match: { requestedBy: userId, createdAt: { $gte: eightWeeksAgo } } },
-      {
-        $group: {
-          _id: { $isoWeek: '$createdAt' },
-          year: { $first: { $isoWeekYear: '$createdAt' } },
-          reviews: { $sum: 1 },
-        },
-      },
-      { $sort: { year: 1, '_id': 1 } },
-    ]);
-
-    // 4. Issue distribution by category
+    // 3. Issue distribution by category
     const issueDistribution = await Review.aggregate([
       { $match: { requestedBy: userId, status: 'completed' } },
       { $unwind: { path: '$result.issues', preserveNullAndEmptyArrays: false } },
@@ -55,7 +52,7 @@ async function getAnalyticsSummary(req, res) {
       { $sort: { count: -1 } },
     ]);
 
-    // 5. Average review time (createdAt -> updatedAt for completed reviews, approximate)
+    // 4. Average review time (createdAt -> updatedAt for completed reviews, approximate)
     const avgTimeResult = await Review.aggregate([
       { $match: { requestedBy: userId, status: 'completed' } },
       {
@@ -66,7 +63,7 @@ async function getAnalyticsSummary(req, res) {
       { $group: { _id: null, avgMs: { $avg: '$durationMs' } } },
     ]);
 
-    // 6. Repository health scores (avg score per repo for completed reviews)
+    // 5. Repository health scores (avg score per repo for completed reviews)
     const repoHealth = await Review.aggregate([
       { $match: { requestedBy: userId, status: 'completed', 'result.score': { $exists: true } } },
       {
@@ -74,9 +71,10 @@ async function getAnalyticsSummary(req, res) {
           _id: '$repo',
           avgScore: { $avg: '$result.score' },
           reviewCount: { $sum: 1 },
+          totalIssues: { $sum: { $size: { $ifNull: ['$result.issues', []] } } },
         },
       },
-      { $sort: { avgScore: -1 } },
+      { $sort: { reviewCount: -1, avgScore: -1 } },
       {
         $lookup: {
           from: 'repos',
@@ -89,37 +87,43 @@ async function getAnalyticsSummary(req, res) {
       {
         $project: {
           fullName: '$repoInfo.fullName',
+          language: '$repoInfo.language',
           score: { $round: ['$avgScore', 0] },
           reviewCount: 1,
+          totalIssues: 1,
         },
       },
     ]);
 
-    // 7. All review dates for frontend aggregation
-    const allReviews = await Review.find({ requestedBy: userId })
-      .select('createdAt')
+    // 6. All reviews data for frontend aggregation (trends and scores)
+    const allReviews = await Review.find({ requestedBy: userId, status: 'completed' })
+      .select('createdAt result.score')
       .sort({ createdAt: 1 });
+    
     const reviewDates = allReviews.map(r => r.createdAt);
+    const scoreTrends = allReviews.map(r => ({ date: r.createdAt, score: r.result?.score || 0 }));
 
-    const stats = totals[0] || { totalReviews: 0, totalIssues: 0, completedReviews: 0 };
+    const stats = totals[0] || { totalReviews: 0, totalIssues: 0, completedReviews: 0, reposReviewed: 0, avgScore: 0 };
+    
+    // Sort repoHealth by score for the health table, but keep the top one by reviewCount for Most Reviewed
+    const mostReviewedRepo = repoHealth.length > 0 ? repoHealth[0] : null;
+    const sortedRepoHealth = [...repoHealth].sort((a, b) => b.score - a.score);
 
     res.json({
       totalReviews: stats.totalReviews,
       totalIssues: stats.totalIssues,
       criticalIssues: criticalCount[0]?.total || 0,
-      avgReviewTimeSec: avgTimeResult[0]
-        ? Math.round(avgTimeResult[0].avgMs / 1000)
-        : 0,
-      weeklyReviews: weeklyReviews.map(w => ({
-        week: `W${w._id}`,
-        reviews: w.reviews,
-      })),
+      reposReviewed: stats.reposReviewed,
+      averageScore: stats.avgScore || 0,
+      avgReviewTimeSec: avgTimeResult[0] ? Math.round(avgTimeResult[0].avgMs / 1000) : 0,
       issueDistribution: issueDistribution.map(d => ({
         category: d._id,
         count: d.count,
       })),
-      repoHealth,
+      repoHealth: sortedRepoHealth,
+      mostReviewedRepo,
       reviewDates,
+      scoreTrends,
     });
   } catch (err) {
     console.error('getAnalyticsSummary error:', err.message);

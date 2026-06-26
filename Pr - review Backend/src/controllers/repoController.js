@@ -97,4 +97,75 @@ async function disconnectRepo(req, res) {
   }
 }
 
-module.exports = { getRepos, connectRepo, disconnectRepo };
+// GET /api/repos/validate/:owner/:repo
+// Validates a GitHub repo exists and returns metadata for the preview card.
+async function validateRepo(req, res) {
+  const fullName = `${req.params.owner}/${req.params.repo}`;
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const ghRes = await axios.get(`https://api.github.com/repos/${fullName}`, {
+      headers: { Authorization: `Bearer ${user.githubAccessToken}` },
+    });
+
+    const d = ghRes.data;
+    res.json({
+      valid: true,
+      fullName: d.full_name,
+      owner: d.owner?.login,
+      avatarUrl: d.owner?.avatar_url,
+      description: d.description,
+      language: d.language,
+      defaultBranch: d.default_branch,
+      stargazersCount: d.stargazers_count,
+      forksCount: d.forks_count,
+      isPrivate: d.private,
+      updatedAt: d.updated_at,
+      openIssuesCount: d.open_issues_count,
+    });
+  } catch (err) {
+    if (err.response?.status === 404) {
+      return res.status(404).json({ valid: false, reason: 'not_found' });
+    }
+    if (err.response?.status === 403) {
+      return res.status(403).json({ valid: false, reason: 'access_denied' });
+    }
+    res.status(500).json({ valid: false, reason: 'unknown' });
+  }
+}
+
+// GET /api/repos/search?q=keyword
+// Searches GitHub repositories for auto-complete.
+async function searchRepos(req, res) {
+  const q = req.query.q;
+  if (!q || q.length < 2) {
+    return res.json({ items: [] });
+  }
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const ghRes = await axios.get('https://api.github.com/search/repositories', {
+      headers: { Authorization: `Bearer ${user.githubAccessToken}` },
+      params: { q, per_page: 6, sort: 'stars', order: 'desc' },
+    });
+
+    const items = ghRes.data.items.map(r => ({
+      fullName: r.full_name,
+      owner: r.owner?.login,
+      avatarUrl: r.owner?.avatar_url,
+      description: r.description,
+      language: r.language,
+      stargazersCount: r.stargazers_count,
+      isPrivate: r.private,
+    }));
+
+    res.json({ items });
+  } catch (err) {
+    console.error('searchRepos error:', err.message);
+    res.json({ items: [] });
+  }
+}
+
+module.exports = { getRepos, connectRepo, disconnectRepo, validateRepo, searchRepos };
