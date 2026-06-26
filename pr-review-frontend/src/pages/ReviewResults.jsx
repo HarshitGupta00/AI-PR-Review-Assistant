@@ -103,9 +103,7 @@ export default function ReviewResults() {
           </div>
           <p className="text-sm text-[#8892b0] mt-1">{issues.length} findings identified</p>
         </div>
-        <button className="btn-secondary text-sm">
-          <ExternalLink size={14} /> Open PR
-        </button>
+        
       </motion.div>
 
       {/* Score + Issue Breakdown row */}

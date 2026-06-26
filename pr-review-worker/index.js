@@ -45,6 +45,16 @@ async function processJob(job) {
   }
 }
 
+const express = require('express');
+
+// Create a dummy Express app for Render's Health Check
+const app = express();
+const port = process.env.PORT || 10000;
+
+app.get('/', (req, res) => {
+  res.status(200).send('Worker is alive and waiting for jobs...');
+});
+
 async function start() {
   await connectDB();
 
@@ -61,7 +71,11 @@ async function start() {
     console.error(`Job ${job?.id} failed permanently:`, err.message);
   });
 
-  console.log('Worker started, waiting for jobs...');
+  // Start the dummy HTTP server
+  app.listen(port, () => {
+    console.log(`Health check server listening on port ${port}`);
+    console.log('Worker started, waiting for jobs...');
+  });
 }
 
 start();
