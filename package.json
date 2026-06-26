@@ -1,0 +1,12 @@
+{
+  "name": "ai-pr-review-assistant-root",
+  "version": "1.0.0",
+  "description": "Root runner for AI PR Review Assistant",
+  "scripts": {
+    "install:all": "npm install --prefix \"Pr - review Backend\" && npm install --prefix pr-review-frontend && npm install --prefix pr-review-worker",
+    "backend": "npm run dev --prefix \"Pr - review Backend\"",
+    "frontend": "npm run dev --prefix pr-review-frontend",
+    "worker": "npm start --prefix pr-review-worker",
+    "start": "npx concurrently --kill-others-on-fail -n \"backend,frontend,worker\" -c \"blue.bold,green.bold,magenta.bold\" \"npm run dev --prefix \\\"Pr - review Backend\\\"\" \"npm run dev --prefix pr-review-frontend\" \"npm start --prefix pr-review-worker\""
+  }
+}
