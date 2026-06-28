@@ -35,10 +35,14 @@ async function processJob(job) {
       `risk: ${result.riskLevel}, issues: ${result.issues.length}`
     );
   } catch (err) {
-    console.error(`Review ${reviewId} failed:`, err.message);
+    console.error(`Review ${reviewId} failed (attempt ${job.attemptsMade + 1}/${job.opts.attempts}):`, err.message);
 
-    review.status = 'failed';
-    review.errorMessage = err.message;
+    if (job.attemptsMade >= job.opts.attempts - 1) {
+      review.status = 'failed';
+      review.errorMessage = err.message;
+    } else {
+      review.status = 'pending';
+    }
     await review.save();
 
     throw err; // let BullMQ handle retry logic
